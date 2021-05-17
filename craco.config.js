@@ -19,7 +19,7 @@ module.exports = {
             options: {
                 lessLoaderOptions: {
                     lessOptions: {
-                        modifyVars: { '@primary-color': '#1DA57A' },//修改的主题颜色
+                        modifyVars: { '@primary-color': '#096dd9' },//修改的主题颜色
                         javascriptEnabled: true,
                     },
                 },
