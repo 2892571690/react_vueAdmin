@@ -7,3 +7,6 @@ import request from './request';
 
 // 登录
 export const reqLogin = (data) => request('/login', data, 'POST');
+
+// 获取左侧菜单栏
+export const reqMenus = (data) => request('/menus', data, 'GET');

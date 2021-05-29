@@ -3,6 +3,8 @@
  */
 import axios from 'axios'
 import { message} from 'antd';
+import storeUtils from '../utils/store'
+import {USER} from '../utils/content'
 
 // 创建一个独立的axios实例
 const service = axios.create({
@@ -12,6 +14,7 @@ const service = axios.create({
 
 // 请求拦截
 service.interceptors.request.use(config => {
+    config.headers.Authorization = storeUtils.getStore(USER).token
     return config;
 }, err => {
     return Promise.reject(err)

@@ -15,5 +15,9 @@ export default {
     // 删除
     cleStore(name) {
         store.remove(name)
+    },
+    // 全部删除
+    clearAll(){
+        store.clearAll()
     }
 }
