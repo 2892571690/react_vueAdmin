@@ -8,7 +8,7 @@ import Myuser from './utils/user';
 import { USER } from './utils/content';
 
 const user = storeUtil.getStore(USER);
-console.log(user)
+console.log(user);
 Myuser.user = user;
 
 ReactDOM.render(<App />, document.getElementById('root'));

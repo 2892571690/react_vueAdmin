@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 
 import Myuser from '../../utils/user';
 import storeUtil from '../../utils/store';
@@ -12,13 +12,15 @@ import { MenuUnfoldOutlined, MenuFoldOutlined, createFromIconfontCN } from '@ant
 import loginImg from './login.png';
 import './Home.less';
 
-import Users from './Users/Users'
+import Users from './Users/Users';
+import Index from './Index/Index';
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
 const IconFont = createFromIconfontCN({
 	scriptUrl: '//at.alicdn.com/t/font_2576688_i6vxp0o97eg.js'
 });
+
 export default class Home extends Component {
 	state = {
 		collapsed: false,
@@ -30,25 +32,39 @@ export default class Home extends Component {
 			'102': 'icon-dingdan',
 			'145': 'icon-shuju'
 		},
-		openKeys: []
+		openKeys: [], //当前打开的侧边栏
 	};
-	UNSAFE_componentWillMount(){
-		console.log(typeof(storeUtil.getStore(FACURRENTMENU)))
-		this.setState({
-			openKeys:[typeof(storeUtil.getStore(FACURRENTMENU)) == 'string' ? storeUtil.getStore(FACURRENTMENU) : '']
-		})
+	UNSAFE_componentWillMount() {
+		// 判断当前的路由路径是不是在index上，如果在把侧边栏打开的数据清除，让他关闭
+		if (this.props.history.location.pathname === '/home/index' || this.props.history.location.pathname === '/') {
+			storeUtil.cleStore(FACURRENTMENU);
+			storeUtil.cleStore(CURRENTMENU);
+			this.setState({
+				openKeys: []
+			});
+		} else {
+			// 当页面刷新的时候，从缓存中取出之前点击的侧边栏出局，打开其他侧边栏，关起之前的侧边栏
+			this.setState({
+				openKeys: [
+					typeof storeUtil.getStore(FACURRENTMENU) == 'string' ? storeUtil.getStore(FACURRENTMENU) : ''
+				]
+			});
+		}
 	}
 	componentDidMount() {
 		this.getMenusList();
 	}
 	render() {
-		const { user } = Myuser;
 		const { menusList, collapsed, menusIconList, openKeys } = this.state;
-		const currentMenu = storeUtil.getStore(CURRENTMENU) || '';
-		const faCurrentMenu = storeUtil.getStore(FACURRENTMENU) || '';
+		// 判断有没有用户信息
+		const { user } = Myuser;
 		if (!user || !user.id) {
 			return <Redirect to="/login" />;
 		}
+		// 获取当前点击的子侧边栏
+		let currentMenu = storeUtil.getStore(CURRENTMENU).id ? storeUtil.getStore(CURRENTMENU) : '';
+		// 获取当前点击的父侧边栏
+		let faCurrentMenu = typeof storeUtil.getStore(FACURRENTMENU) == 'string' ? storeUtil.getStore(FACURRENTMENU) : '';
 		return (
 			<Layout style={{ height: '100%' }}>
 				<Header className="header_wrap" style={{ height: '80px' }}>
@@ -70,7 +86,7 @@ export default class Home extends Component {
 							{React.createElement(collapsed ? MenuUnfoldOutlined : MenuFoldOutlined)}
 						</Button>
 						<Menu
-							defaultSelectedKeys={[ currentMenu.path ]}
+							selectedKeys={[currentMenu.path]}
 							defaultOpenKeys={[ faCurrentMenu ]}
 							onOpenChange={this.onOpenChange}
 							mode="inline"
@@ -97,7 +113,11 @@ export default class Home extends Component {
 						</Menu>
 					</Sider>
 					<Content>
-						<Route path='/home/users' component={Users}></Route>
+						<Switch>
+							<Route path="/home/index" component={Index} />
+							<Route path="/home/users" component={Users} />
+							<Redirect to="/home/index" />
+						</Switch>
 					</Content>
 				</Layout>
 			</Layout>
@@ -106,8 +126,7 @@ export default class Home extends Component {
 
 	// 退出登录
 	outUser = () => {
-		// storeUtil.cleStore(USER);
-		storeUtil.clearAll()
+		storeUtil.clearAll();
 		this.props.history.replace('/login');
 	};
 
@@ -143,7 +162,7 @@ export default class Home extends Component {
 				});
 			});
 			storeUtil.setStore(FACURRENTMENU, faMenu);
-			this.props.history.push(`/home/${itemc.path}`)
+			this.props.history.push(`/home/${itemc.path}`);
 		};
 	};
 
@@ -157,6 +176,6 @@ export default class Home extends Component {
 		} else {
 			this.setState({ openKeys: latestOpenKey ? [ latestOpenKey ] : [] });
 		}
-		console.log(openKeys)
+		console.log(openKeys);
 	};
 }
