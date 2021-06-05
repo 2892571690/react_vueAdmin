@@ -3,7 +3,7 @@ import { Redirect, Route, Switch } from 'react-router-dom';
 
 import Myuser from '../../utils/user';
 import storeUtil from '../../utils/store';
-import { USER, CURRENTMENU, FACURRENTMENU } from '../../utils/content';
+import { USER, CURRENTMENU, FACURRENTMENU,ICONFONTURL } from '../../utils/content';
 import { reqMenus } from '../../api/api';
 
 import { Layout, Button, Menu } from 'antd';
@@ -18,7 +18,7 @@ import Index from './Index/Index';
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
 const IconFont = createFromIconfontCN({
-	scriptUrl: '//at.alicdn.com/t/font_2576688_i6vxp0o97eg.js'
+	scriptUrl: ICONFONTURL
 });
 
 export default class Home extends Component {

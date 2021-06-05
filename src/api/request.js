@@ -26,7 +26,7 @@
              // 此处作用很大，可以扩展很多功能。
              // 比如对接多个后台，数据结构不一致，可做接口适配器
              // 也可对返回日期/金额/数字等统一做集中处理
-             if (res.meta.status === 200) {
+             if (res.meta.status === 200 || res.meta.status === 201) {
                  resolve(res.data);
                  message.success(res.meta.msg)
              } else {
