@@ -2,18 +2,21 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Breadcrumb, Card, Input, Button, Table, Switch, Modal, Form } from 'antd';
-import { createFromIconfontCN } from '@ant-design/icons';
+import { createFromIconfontCN, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import storeUtil from '../../../utils/store';
 import { CURRENTMENU, FACURRENTMENU, ICONFONTURL } from '../../../utils/content';
 
-import { reqUserList, reqUserStatus,reqAddUser } from '../../../api/api';
+import { reqUserList, reqUserStatus, reqAddUser, reqSetUserData, reqDeleteUser } from '../../../api/api';
 
 import './Users.less';
 
 const IconFont = createFromIconfontCN({
 	scriptUrl: ICONFONTURL
 });
+
+const { confirm } = Modal;
+
 const emailRules = /^\w+@[a-zA-Z0-9]{2,10}(?:\.[a-z]{2,4}){1,3}$/;
 const mobileRules = /^[1][3,4,5,7,8,9][0-9]{9}$/;
 export default class Users extends Component {
@@ -24,8 +27,16 @@ export default class Users extends Component {
 		total: 0, //总数量
 		pagenum: 1, //当前页数
 		pagesize: 5, //当前页数显示多少个
+		isEnd:false,//当前页是否只要一条数据
 		userValue: '', //搜索的内容
-		isModalVisible: false
+		isModalVisible: false, //是否显示添加或者修改弹框
+		isSet: false, //是否是修改弹框
+		setUserData: {
+			//修改用户的数据
+			username: '',
+			email: '',
+			mobile: ''
+		}
 	};
 
 	componentDidMount() {
@@ -33,7 +44,7 @@ export default class Users extends Component {
 	}
 
 	render() {
-		const { data, total, isModalVisible } = this.state;
+		const { data, total, isModalVisible, isSet, setUserData } = this.state;
 		const columns = [
 			{
 				title: '#',
@@ -77,7 +88,12 @@ export default class Users extends Component {
 				render: (text, item, index) => {
 					return (
 						<div>
-							<Button style={{ width: '50px' }} type="primary" icon={<IconFont type="icon-bi" />} />
+							<Button
+								style={{ width: '50px' }}
+								type="primary"
+								icon={<IconFont type="icon-bi" />}
+								onClick={this.setUserItem(item)}
+							/>
 							<Button
 								style={{
 									width: '50px',
@@ -87,6 +103,7 @@ export default class Users extends Component {
 								}}
 								type="primary"
 								icon={<IconFont type="icon-shanchu1" />}
+								onClick={this.userDeleteClick(item)}
 							/>
 							<Button
 								style={{ width: '50px', background: '#f17d3a', borderColor: '#f17d3a' }}
@@ -117,12 +134,7 @@ export default class Users extends Component {
 								onSearch={this.userValueSearch}
 							/>
 						</Input.Group>
-						<Button
-							type="primary"
-							onClick={() => {
-								this.setState({ isModalVisible: true });
-							}}
-						>
+						<Button type="primary" onClick={this.addUserData}>
 							添加
 						</Button>
 					</div>
@@ -144,7 +156,7 @@ export default class Users extends Component {
 					/>
 				</Card>
 				<Modal
-					title="添加用户"
+					title={isSet ? '修改用户信息' : '添加用户'}
 					destroyOnClose
 					visible={isModalVisible}
 					onOk={this.handleOk}
@@ -152,13 +164,24 @@ export default class Users extends Component {
 						this.setState({ isModalVisible: false });
 					}}
 				>
-					<Form ref={this.form} name="basic" labelCol={{ span: 4 }}>
+					<Form
+						ref={this.form}
+						name="basic"
+						labelCol={{ span: 4 }}
+						initialValues={{
+							username: setUserData.username,
+							email: setUserData.email,
+							mobile: setUserData.mobile
+						}}
+					>
 						<Form.Item label="用户名" name="username" rules={[ { required: true, message: '用户名不能为空!' } ]}>
-							<Input placeholder="请输入用户名" />
+							<Input placeholder="请输入用户名" disabled={isSet} />
 						</Form.Item>
-						<Form.Item label="密码" name="password" rules={[ { required: true, message: '密码不能为空!' } ]}>
-							<Input placeholder="请输入密码" />
-						</Form.Item>
+						{!isSet ? (
+							<Form.Item label="密码" name="password" rules={[ { required: true, message: '密码不能为空!' } ]}>
+								<Input placeholder="请输入密码" />
+							</Form.Item>
+						) : null}
 						<Form.Item
 							label="邮箱"
 							name="email"
@@ -216,6 +239,11 @@ export default class Users extends Component {
 			pagesize: this.state.pagesize
 		});
 		console.log(res);
+		if(res.users.length === 1){
+			this.setState({
+				isEnd: true
+			});
+		}
 		this.setState({
 			data: res.users,
 			total: res.total
@@ -283,18 +311,92 @@ export default class Users extends Component {
 	handleOk = () => {
 		this.form.current.validateFields().then(async (value) => {
 			console.log(value);
-			const res = await reqAddUser({
-				username:value.username,
-				password:value.password,
-				email:value.email,
-				mobile:value.mobile,
-			})
-			console.log(res)
-			this.setState({
-				data:[...this.state.data,{...res,role_name:'超级管理员'}],
-				isModalVisible:false,
-			})
-			
+			if (this.state.isSet) {
+				//修改
+				const id = this.state.setUserData.id;
+				const res = await reqSetUserData(id, {
+					email: value.email,
+					mobile: value.mobile
+				});
+				console.log(res);
+				let newData = this.state.data.map((item) => {
+					if (item.id === res.id) {
+						item.email = res.email;
+						item.mobile = res.mobile;
+					}
+					return item;
+				});
+				this.setState({
+					data: newData,
+					isModalVisible: false
+				});
+			} else {
+				//添加
+				const res = await reqAddUser({
+					username: value.username,
+					password: value.password,
+					email: value.email,
+					mobile: value.mobile
+				});
+				console.log(res);
+				this.setState({
+					isModalVisible: false
+				});
+				this.getUserList();
+			}
 		});
+	};
+
+	// 修改用户信息
+	setUserItem = (item) => {
+		return () => {
+			let newSetUserData = {
+				username: item.username,
+				email: item.email,
+				mobile: item.mobile,
+				id: item.id
+			};
+			this.setState({
+				setUserData: newSetUserData,
+				isSet: true,
+				isModalVisible: true
+			});
+		};
+	};
+
+	// 添加用户按钮
+	addUserData = () => {
+		let newSetUserData = {
+			username: '',
+			email: '',
+			mobile: ''
+		};
+		this.setState({ setUserData: newSetUserData, isModalVisible: true, isSet: false });
+	};
+
+	// 删除用户
+	userDeleteClick = (item) => {
+		return () => {
+			// 删除的时候判断最后一页是否只要一条，是就要请求上一页的数据
+			if(this.state.isEnd){
+				this.setState({
+					pagenum: this.state.pagenum - 1
+				})
+			}
+			console.log(item);
+			confirm({
+				title: '提示',
+				icon: <ExclamationCircleOutlined />,
+				content: '此操作将永久删除用户，是否继续？',
+				okText: '确定',
+				okType: 'danger',
+				cancelText: '取消',
+				onOk: async () => {
+					const res = await reqDeleteUser(item.id, {});
+					this.getUserList();
+				},
+				onCancel() {}
+			});
+		};
 	};
 }

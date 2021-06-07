@@ -14,6 +14,8 @@ import './Home.less';
 
 import Users from './Users/Users';
 import Index from './Index/Index';
+import Rights from './Rights/Rights'
+import Roles from './Roles/Roles'
 
 const { Header, Sider, Content } = Layout;
 const { SubMenu } = Menu;
@@ -116,6 +118,8 @@ export default class Home extends Component {
 						<Switch>
 							<Route path="/home/index" component={Index} />
 							<Route path="/home/users" component={Users} />
+							<Route path="/home/Rights" component={Rights} />
+							<Route path="/home/Roles" component={Roles} />
 							<Redirect to="/home/index" />
 						</Switch>
 					</Content>

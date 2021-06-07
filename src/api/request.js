@@ -13,7 +13,7 @@
              params: params
          }
          // post请求使用data字段
-         if (method === 'POST') data = {
+         if (method === 'POST' || method === 'PUT' || method === 'DELETE') data = {
              data: params
          }
          console.log('参数-----', data)

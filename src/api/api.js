@@ -15,7 +15,16 @@ export const reqMenus = (data) => request('/menus', data, 'GET');
 export const reqUserList = (data) => request('/users', data, 'GET');
 
 // 修改用户状态
-export const reqUserStatus = (data) => request(`/users/${data.uId}/state/${data.type}`, data, 'PUT');
+export const reqUserStatus = (data) => request(`/users/${data.uId}/state/${data.type}`, data={}, 'PUT');
 
 // 获取用户列表数据
 export const reqAddUser = (data) => request('/users', data, 'POST');
+
+// 修改用户信息
+export const reqSetUserData = (id,data) => request(`/users/${id}`, data, 'PUT');
+
+// 删除用户信息
+export const reqDeleteUser = (id,data) => request(`/users/${id}`, data, 'DELETE');
+
+// 所有权限列表
+export const reqRightsList  = (type,data) => request(`/rights/${type}`, data, 'GET');
